@@ -25,6 +25,9 @@ function service_overlord() {
   while [ "$step_number" -lt "${#steps[@]}" ] && \
     [ "$timeout_power" -lt "$timeout_power_limit" ]
   do
+    echo $step_number
+    echo ${steps[@]}
+    echo ${steps[$step_number]}
     if [[ "$current_step" == ${steps[$step_number]} ]]
     then
       sleep $((timeout_value ** $timeout_power))
