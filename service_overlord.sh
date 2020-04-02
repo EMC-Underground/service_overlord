@@ -59,7 +59,7 @@ function service_overlord() {
         success step_number
         ;;
       "stack_deploy_check")
-        service_state=`docker service ps ${stack}_${service} > 2>/dev/null \
+        service_state=`docker service ps ${stack}_${service} \
           | awk 'FNR == 2 {print $6}'`
         [[ $service_state != "Running" ]] && timeout timeout_power && continue
         success step_number
