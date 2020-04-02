@@ -239,7 +239,7 @@ EOM
 }
 
 ##### Parsing arguments ######
-[[ $# -eq 0 ]] && sub_main
+[[ $# -eq 0 ]] && help_main
 subcommand=$1
 case $subcommand in
   "" | "-h" | "--help")
