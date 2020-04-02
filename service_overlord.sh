@@ -19,10 +19,9 @@ destroy_args=( "docker_host" "stack" )
 
 function service_overlord() {
   local step_number=0 timeout_power=2 timeout_power_limit=7 timeout_value=2
-  local current_step="" ERROR=""
+  local current_step="" ERROR="" url="http://${stack}.${dns_suffix}"
   export DOCKER_HOST=$docker_host
   export DNS_SUFFIX=$dns_suffix
-  url="http://${stack}.${DNS_SUFFIX}"
   while [ "$step_number" -lt "${#steps[@]}" ] && \
     [ "$timeout_power" -lt "$timeout_power_limit" ]
   do
