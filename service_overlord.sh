@@ -10,7 +10,7 @@ create_args=( "docker_host" "stack" "service" )
 
 # Create_web sub command details
 create_web_steps=( "stack_check" "stack_cleanup" "network_cleanup" \
-  "stack_deploy" "stack_deploy_check" "stack_web_deploy_check" )
+  "stack_deploy" "stack_deploy_check" "stack_web_stack_check" )
 create_web_args=( "docker_host" "stack" "dns_suffix" "service" )
 
 # Destroy sub command details
@@ -25,9 +25,6 @@ function service_overlord() {
   while [ "$step_number" -lt "${#steps[@]}" ] && \
     [ "$timeout_power" -lt "$timeout_power_limit" ]
   do
-    echo $step_number
-    echo ${steps[@]}
-    echo ${steps[$step_number]}
     if [[ "$current_step" == ${steps[$step_number]} ]]
     then
       sleep $((timeout_value ** $timeout_power))
@@ -66,7 +63,7 @@ function service_overlord() {
         [[ $service_state != "Running" ]] && timeout timeout_power && continue
         success step_number
         ;;
-      "stack_web_service_check")
+      "stack_web_stack_check")
         http_state=`curl -o /dev/null -Ls -f -w "%{http_code}" ${url}`
         [[ "$http_state" != "200" ]] && timeout timeout_power && continue
         success step_number
