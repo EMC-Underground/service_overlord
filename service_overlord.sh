@@ -8,6 +8,8 @@ function service_overlord() {
   local step_number=0 timeout_power=2 timeout_power_limit=7 timeout_value=2
   local current_step="" ERROR=""
   export DOCKER_HOST=$docker_host
+  export DNS_SUFFIX=$dns_suffix
+  url="http://${stack}.${DNS_SUFFIX}"
   while [ "$step_number" -lt "${#steps[@]}" ] && [ "$timeout_power" -lt "$timeout_power_limit" ]
   do
     if [[ "$current_step" == ${steps[$step_number]} ]]
@@ -144,9 +146,9 @@ function help_main() {
 Service Overlord
 A pipeline tool to spin up and spin down Docker Stacks
 
-$(basename "$0") [-h]
+service_overlord.sh [-h]
 
-Usage: $(basename "$0") [OPTIONS] COMMAND
+Usage: service_overlord.sh [OPTIONS] COMMAND
 
 Global Options:
   -h, --help      Print this help message
@@ -156,7 +158,7 @@ Commands:
   destroy         Destroy existing Stack, verify default overlay is destroyed
   create_web      Perform the create command and verify the http service is reachable
 
-Run '$(basename "$0") COMMAND --help' for more information on a command.
+Run 'service_overlord.sh COMMAND --help' for more information on a command.
 EOM
   exit 1
 }
@@ -167,9 +169,9 @@ function help_create_web() {
 Service Overlord
 A pipeline tool to spin up and spin down Docker Stacks
 
-$(basename "$0") create_web [-h]
+service_overlord.sh create_web [-h]
 
-Usage: $(basename "$0") [GLOBAL_OPTIONS] create_web [OPTIONS]
+Usage: service_overlord.sh [GLOBAL_OPTIONS] create_web [OPTIONS]
 
 ***This requires a docker-compose.yml file in the current dir***
 ***Assumes the url is <service_name>.<dns_suffix>***
@@ -184,7 +186,7 @@ Options:
       --dns_suffix    The FQDN suffix for the service URL (Required)
 
 Example Commands:
-  $ $(basename "$0") create_web --dns_suffix 10.10.10.10.xip.io --stack object --docker_host 10.10.10.10 --service server
+  $ service_overlord.sh create_web --dns_suffix 10.10.10.10.xip.io --stack object --docker_host 10.10.10.10 --service server
 EOM
   exit 1
 }
@@ -195,9 +197,9 @@ function help_create() {
 Service Overlord
 A pipeline tool to spin up and spin down Docker Stacks
 
-$(basename "$0") create [-h]
+service_overlord.sh create [-h]
 
-Usage: $(basename "$0") [GLOBAL_OPTIONS] create [OPTIONS]
+Usage: service_overlord.sh [GLOBAL_OPTIONS] create [OPTIONS]
 
 ***This requires a docker-compose.yml file in the current dir***
 
@@ -210,7 +212,7 @@ Options:
       --docker_host   The IP or DNS of the host running docker (Required)
 
 Example Commands:
-  $ $(basename "$0") create --stack object --docker_host 10.10.10.10 --service server
+  $ service_overlord.sh create --stack object --docker_host 10.10.10.10 --service server
 EOM
   exit 1
 }
@@ -218,10 +220,10 @@ EOM
 function help_destroy() {
   cat << EOM
 Service Overlord
-$(basename "$0") destroy [-h]
+service_overlord.sh destroy [-h]
 A pipeline tool to spin up and spin down Docker Stacks
 
-Usage: $(basename "$0") [GLOBAL_OPTIONS] destroy [OPTIONS]
+Usage: service_overlord.sh [GLOBAL_OPTIONS] destroy [OPTIONS]
 
 Global Options:
   -h, --help          Print this help message
@@ -231,7 +233,7 @@ Options:
       --docker_host   The IP or DNS of the host running docker (Required)
 
 Example Commands:
-  $ $(basename "$0") destroy --stack test --docker_host 10.10.10.10
+  $ service_overlord.sh destroy --stack test --docker_host 10.10.10.10
 EOM
   exit 1
 }
@@ -248,17 +250,8 @@ case $subcommand in
     sub_${subcommand} $@
     if [ $? = 127 ]; then
       echo "Error: '$subcommand' is not a known subcommand." >&2
-      echo "       Run '$(basename "$0") --help' for a list of known subcommands." >&2
+      echo "       Run 'service_overlord.sh --help' for a list of known subcommands." >&2
       exit 1
     fi
     ;;
 esac
-
-create_vars=( "dns_suffix" "docker_host" "stack" "service" "steps" )
-missing=()
-
-##### Kicking off this mutha #####
-# url="https://${stack}.${DNS_SUFFIX}"
-#temp_arg="$(tr '[:lower:]' '[:upper:]' <<< ${temp_arg:0:1})${temp_arg:1}"
-#upper_stack="$(tr '[:lower:]' '[:upper:]' <<< ${stack:0:1})${stack:1}"
-#echo -e "\n$temp_arg the $upper_stack Docker Stack\n"
