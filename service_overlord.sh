@@ -16,7 +16,8 @@ create_web_steps=( "stack_check" "stack_cleanup" "network_cleanup" \
 create_web_args=( "docker_host" "stack" "dns_suffix" "service" )
 
 # Destroy sub command details
-destroy_steps=( "stack_check" "stack_cleanup" "network_cleanup" )
+destroy_steps=( "stack_check" "stack_cleanup" "network_cleanup" \
+  "stack_volume_check" "stack_volume_remove" "volume_cleanup" )
 destroy_args=( "docker_host" "stack" )
 
 function service_overlord() {
