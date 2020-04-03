@@ -4,13 +4,15 @@
 sub_commands=( "create" "destroy" "create_web" )
 
 # Create sub command details
-create_steps=( "stack_check" "stack_cleanup" "network_cleanup" "stack_deploy" \
+create_steps=( "stack_check" "stack_cleanup" "network_cleanup" \
+  "stack_volume_check" "stack_volume_remove" "volume_cleanup" "stack_deploy" \
   "stack_deploy_check" )
 create_args=( "docker_host" "stack" "service" )
 
 # Create_web sub command details
 create_web_steps=( "stack_check" "stack_cleanup" "network_cleanup" \
-  "stack_deploy" "stack_deploy_check" "stack_web_stack_check" )
+  "stack_volume_check" "stack_volume_remove" "volume_cleanup" "stack_deploy" \
+  "stack_deploy_check" "stack_web_stack_check" )
 create_web_args=( "docker_host" "stack" "dns_suffix" "service" )
 
 # Destroy sub command details
@@ -66,6 +68,24 @@ function service_overlord() {
       "stack_web_stack_check")
         http_state=`curl -o /dev/null -Ls -f -w "%{http_code}" ${url}`
         [[ "$http_state" != "200" ]] && timeout timeout_power && continue
+        success step_number
+        ;;
+      "stack_volume_check")
+        docker volume ls | grep "${stack}_${service}-data" > /dev/null 2>&1
+        [[ $? -ne 0 ]] && \
+          step_number=$((step_number+3)) && \
+          echo "Done" && \
+          continue
+        success step_number
+        ;;
+      "stack_volume_remove")
+        { ERROR=$( {docker volume rm ${stack}_${service}-data ; } 2>&1 ); } 3>&1
+        [[ $? -ne 0 ]] && error "$ERROR"
+        success step_number
+        ;;
+      "volume_cleanup")
+        docker network ls | grep "${stack}_default" > /dev/null 2>&1
+        [[ $? -eq 0 ]] && timeout timeout_power && continue
         success step_number
         ;;
       *)
@@ -160,10 +180,12 @@ EOM
 function help_create_web() {
   cat << EOM
 
+Create a new web stack and wait until it is responding
+
 Usage: service_overlord.sh [GLOBAL_OPTIONS] create_web [OPTIONS]
 
-  1. This requires a docker-compose.yml file in the current dir***
-  2. Assumes the url is <stack_name>.<dns_suffix>***
+  1. This requires a docker-compose.yml file in the current dir
+  2. Assumes the url is <stack_name>.<dns_suffix>
 
 Global Options:
   -h, --help          Print main help message
@@ -184,14 +206,11 @@ EOM
 function help_create() {
   cat << EOM
 
-Service Overlord
-A pipeline tool to spin up and spin down Docker Stacks
-
-service_overlord.sh create [-h]
+Create a new stack and wait until it is in a running state
 
 Usage: service_overlord.sh [GLOBAL_OPTIONS] create [OPTIONS]
 
-***This requires a docker-compose.yml file in the current dir***
+  1. This requires a docker-compose.yml file in the current dir
 
 Global Options:
   -h, --help          Print main help message
