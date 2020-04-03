@@ -85,7 +85,7 @@ function service_overlord() {
         success step_number
         ;;
       "volume_cleanup")
-        docker network ls | grep "${stack}_default" > /dev/null 2>&1
+        docker volume ls | grep "${stack}_${service}-data" > /dev/null 2>&1
         [[ $? -eq 0 ]] && timeout timeout_power && continue
         success step_number
         ;;
