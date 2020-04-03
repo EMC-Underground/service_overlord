@@ -80,7 +80,8 @@ function service_overlord() {
         success step_number
         ;;
       "stack_volume_remove")
-        { ERROR=$( {docker volume rm ${stack}_${service}-data ; } 2>&1 ); } 3>&1
+        local combo=${stack}_${service}-data
+        { ERROR=$( {docker volume rm $combo ; } 2>&1 ); } 3>&1
         [[ $? -ne 0 ]] && error "$ERROR"
         success step_number
         ;;
@@ -250,6 +251,7 @@ EOM
   exit 1
 }
 
+version="0.1.0"
 ##### Parsing arguments ######
 [[ $# -eq 0 ]] && help_main
 [[ ! " ${sub_commands[@]} " =~ " $1 " ]] && \
@@ -261,6 +263,7 @@ case $subcommand in
     help_main
     ;;
   *)
+    echo -e "Service Overlord v${version}\n"
     shift
     sub_main $@
     ;;
