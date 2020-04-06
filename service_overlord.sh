@@ -80,7 +80,7 @@ function service_overlord() {
         success step_number
         ;;
       "stack_volume_remove")
-        { ERROR=$( { docker volume rm ${stack}_${service}-data ; } 2>&1 ); } 3>&1
+        { ERROR=$( { docker volume rm "${stack}_${service}-data" ; } 2>&1 ); } 3>&1
         [[ $? -ne 0 ]] && error "$ERROR"
         success step_number
         ;;
