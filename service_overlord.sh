@@ -25,8 +25,8 @@ function service_overlord() {
   local current_step="" ERROR="" url="http://${stack}.${dns_suffix}"
   export DOCKER_HOST=$docker_host
   export DNS_SUFFIX=$dns_suffix
-  while [ "$step_number" -lt "${#steps[@]}" ] && \
-    [ "$timeout_power" -lt "$timeout_power_limit" ]
+  while [[ "$step_number" -lt "${#steps[@]}" ]] && \
+    [[ "$timeout_power" -lt "$timeout_power_limit" ]]
   do
     if [[ "$current_step" == ${steps[$step_number]} ]]
     then
@@ -68,7 +68,8 @@ function service_overlord() {
         ;;
       "stack_web_stack_check")
         http_state=`curl -o /dev/null -Ls -f -w "%{http_code}" ${url}`
-        [[ "$http_state" != "200" ]] && timeout timeout_power && continue
+        [[ "$http_state" != "200" ]] || [[ "$http_state" != "401" ]] && \
+          timeout timeout_power && continue
         success step_number
         ;;
       "stack_volume_check")
@@ -95,6 +96,9 @@ function service_overlord() {
         ;;
     esac
   done
+  [[ "$timeout_power" -ge "$timeout_power_limit" ]] && \
+    echo "Timed Out!" && \
+    exit 1
   echo -e "\nDeployment Complete!"
 }
 
