@@ -80,7 +80,7 @@ function service_overlord() {
         success step_number
         ;;
       "stack_volume_remove")
-        docker volume rm "${stack}_${service}-data"
+        docker volume rm "${stack}_${service}-data" > /dev/null 2>&1
         [[ $? -ne 0 ]] && timeout timeout_power && continue
         success step_number
         ;;
