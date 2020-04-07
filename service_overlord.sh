@@ -52,6 +52,7 @@ function service_overlord() {
       "network_cleanup")
         docker network ls | grep "${stack}_default" > /dev/null 2>&1
         [[ $? -eq 0 ]] && timeout timeout_power && continue
+        sleep 2
         success step_number
         ;;
       "stack_deploy")
