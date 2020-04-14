@@ -1,13 +1,18 @@
 #!/bin/sh
 
 # Available sub commands
-sub_commands=( "create" "destroy" "create_web" )
+sub_commands=( "create" "destroy" "create_web" "cleanup" "create_service" )
 
 # Create sub command details
 create_steps=( "stack_check" "stack_cleanup" "network_cleanup" \
   "stack_volume_check" "stack_volume_remove" "volume_cleanup" "stack_deploy" \
   "stack_deploy_check" )
 create_args=( "docker_host" "stack" "service" )
+
+# Create sub command details
+create_service_steps=( "stack_check" "stack_cleanup" "network_cleanup" \
+  "stack_volume_check" "stack_volume_remove" "volume_cleanup" "stack_deploy" )
+create_service_args=( "docker_host" "stack" "service" )
 
 # Create_web sub command details
 create_web_steps=( "stack_check" "stack_cleanup" "network_cleanup" \
@@ -19,6 +24,10 @@ create_web_args=( "docker_host" "stack" "dns_suffix" "service" )
 destroy_steps=( "stack_check" "stack_cleanup" "network_cleanup" \
   "stack_volume_check" "stack_volume_remove" "volume_cleanup" )
 destroy_args=( "docker_host" "stack" )
+
+# Cleanup service sub command details
+cleanup_steps=( "service_cleanup" )
+cleanup_args=( "docker_host" "label" )
 
 function service_overlord() {
   local step_number=0 timeout_power=2 timeout_power_limit=7 timeout_value=2
@@ -42,6 +51,20 @@ function service_overlord() {
           step_number=$((step_number+3)) && \
           echo "Done" && \
           continue
+        success step_number
+        ;;
+      "service_cleanup")
+        id_list=($(docker service ls --filter label=${label} -q))
+        service_state=( 'Failed' 'Shutdown' 'Rejected' 'Orphaned' 'Complete' )
+        for id in ${id_list[@]}
+        do
+          current_state=$(docker service ps ${id} | awk 'FNR == 2 {print $6}')
+          if [[ " ${service_state[@]} " =~ " ${current_state} " ]]
+          then
+            docker service rm ${id} > /dev/null 2>&1
+            [[ $? -ne 0 ]] && error $current_step
+          fi
+        done
         success step_number
         ;;
       "stack_cleanup")
@@ -170,6 +193,8 @@ Global Options:
 
 Commands:
   create          Create a new stack (Destroy stack first if it exists), verify it is in a running state
+  create_service  Create a new service (Meant for one off scripts)
+  cleanup         Cleanup services that that have specified labels
   destroy         Destroy existing Stack, verify default overlay is destroyed
   create_web      Perform the create command and verify the http service is reachable
 
@@ -228,6 +253,30 @@ EOM
   exit 1
 }
 
+function help_create_service() {
+  cat << EOM
+
+Create a new service
+
+Usage: service_overlord.sh [GLOBAL_OPTIONS] create_service [OPTIONS]
+
+  1. This requires a docker-compose.yml file in the current dir
+
+Global Options:
+  -h, --help          Print main help message
+
+Options:
+      --stack         The name of the stack (Required)
+      --service       The name of the service (Required)
+      --docker_host   The IP or DNS of the host running docker (Required)
+  -h, --help          Print this help message
+
+Example Commands:
+  $ service_overlord.sh create_service --stack object --docker_host 10.10.10.10 --service server
+EOM
+  exit 1
+}
+
 function help_destroy() {
   cat << EOM
 Service Overlord
@@ -246,6 +295,28 @@ Options:
 
 Example Commands:
   $ service_overlord.sh destroy --stack test --docker_host 10.10.10.10
+EOM
+  exit 1
+}
+
+function help_cleanup() {
+  cat << EOM
+Service Overlord
+service_overlord.sh cleanup [-h]
+A pipeline tool to spin up and spin down Docker Stacks
+
+Usage: service_overlord.sh [GLOBAL_OPTIONS] cleanup [OPTIONS]
+
+Global Options:
+  -h, --help          Print main help message
+
+Options:
+      --docker_host   The IP or DNS of the host running docker (Required)
+      --label         Label to search for services to cleanup (Required)
+  -h, --help          Print this help message
+
+Example Commands:
+  $ service_overlord.sh cleanup --label cleanup=yes --docker_host 10.10.10.10
 EOM
   exit 1
 }
