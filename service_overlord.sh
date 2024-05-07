@@ -99,6 +99,8 @@ function service_overlord() {
   done
   [[ "$timeout_power" -ge "$timeout_power_limit" ]] && \
     echo "Timed Out!" && \
+    eval steps=( '"${destroy_steps[@]}"' )
+    service_overlord
     exit 1
   echo -e "\nDeployment Complete!"
 }
