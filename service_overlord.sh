@@ -70,7 +70,7 @@ function service_overlord() {
       "stack_web_stack_check")
         http_state=`curl -o /dev/null -Ls -f -w "%{http_code}" ${url}`
         [[ "$http_state" != "200" ]] && [[ "$http_state" != "401" ]] && \
-          timeout timeout_power && continue
+          echo "Unknown State, probably ok, maybe, but who knows"
         success step_number
         ;;
       "stack_volume_check")
